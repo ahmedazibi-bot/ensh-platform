@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>ENSH 1SC - M1 | Plateforme Académique</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; direction: ltr; }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 25px; }
+        .filter-board { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 25px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; align-items: center; }
+        select, input[type="text"], button { padding: 10px 14px; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; }
+        input[type="text"] { width: 250px; }
+        button { background-color: #3498db; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #2980b9; }
+        .reset-btn { text-decoration: none; background-color: #e74c3c; color: white; padding: 10px 14px; border-radius: 5px; font-size: 14px; font-weight: bold; }
+        .reset-btn:hover { background-color: #c0392b; }
+        
+        .module-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 20px; padding: 20px; }
+        .module-title { font-size: 20px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; margin-bottom: 15px; }
+        .category-section { margin-bottom: 15px; padding-left: 15px; border-left: 3px solid #bdc3c7; }
+        .category-title { font-size: 16px; font-weight: bold; color: #e67e22; margin-bottom: 8px; }
+        ul { list-style-type: none; padding-left: 0; margin: 0; }
+        li { padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .file-name { color: #2980b9; font-weight: 500; text-decoration: none; cursor: pointer; }
+        .file-name:hover { text-decoration: underline; }
+        .file-note { color: #7f8c8d; font-size: 12px; }
+        .stats { text-align: center; margin-bottom: 15px; color: #555; font-size: 15px; font-weight: 500; }
+    </style>
+    <script>
+        function openFile(event, fileId) {
+            event.preventDefault(); // منع أي تحديث افتراضي للصفحة
+            fetch('/open/' + fileId)
+                .then(response => {
+                    if (!response.ok) {
+                        alert("Erreur lors de l'ouverture du fichier !");
+                    }
+                })
+                .catch(err => console.error("Erreur réseau :", err));
+        }
+    </script>
+</head>
+<body>
+
+    <h1>ENSH 1SC - M1 : Arborescence des Connaissances</h1>
+
+    <!-- لوحة الفلاتر والبحث -->
+    <div class="filter-board">
+        <form method="GET" action="/" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;">
+            <div>
+                <label for="module">Module :</label>
+                <select name="module" id="module">
+                    <option value="">-- Tous les modules --</option>
+                    {% for mod in all_modules %}
+                        <option value="{{ mod }}" {% if mod == selected_module %}selected{% endif %}>{{ mod }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label for="search">Fichier :</label>
+                <input type="text" name="search" id="search" value="{{ search_query }}" placeholder="Rechercher un fichier...">
+            </div>
+
+            <button type="submit">Filtrer</button>
+            <a href="/" class="reset-btn">Réinitialiser</a>
+        </form>
+    </div>
+
+    <div class="stats">
+        Total des fichiers trouvés : <strong>{{ total_files }}</strong>
+    </div>
+
+    <!-- عرض الهيكل الشجري -->
+    {% for module_name, categories in tree.items() %}
+    <div class="module-card">
+        <div class="module-title">📚 Module : {{ module_name }}</div>
+        
+        {% for cat_name, files in categories.items() %}
+        <div class="category-section">
+            <div class="category-title">📂 {{ cat_name }} ({{ files|length }})</div>
+            <ul>
+                {% for file in files %}
+                <li>
+                    <!-- استخدام دالة JavaScript لفتح الملف بدون تحديث الصفحة -->
+                    <a href="#" onclick="openFile(event, '{{ file[0] }}')" class="file-name">📄 {{ file[3] }}</a>
+                    <span class="file-note">{{ file[6] or '' }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 40px; background: #fff; border-radius: 8px; color: #777;">
+        Aucun fichier trouvé correspondant à vos critères.
+    </div>
+    {% endfor %}
+
+</body>
+</html>
